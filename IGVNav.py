@@ -16,8 +16,8 @@ variant_call_tool_tips = {
 
 variant_tag_tool_tips = {
 'AI': "Adjacent Indel, variant likely due to misalignment of an adjacent indel",
-'HDR': "High Discrepancy Region, Region contain many reads with multiple mismatches",
-'MM': "Multiple Mismatches, Read contains multiple mismatches from referencence",
+'HDR': "High Discrepancy Region, Dirty Region, Region contain many reads with multiple mismatches",
+'MM': "Multiple Mismatches, Reads with variant contains multiple mismatches from referencence",
 'MV': "Multiple Variants, More than 1 non-reference variant at the same base location",
 'MN': "MonoNucleotide run, Region contains pattern of repeat ex. AAAAAA",
 'DN': "DiNucleotide run, Region contains pattern of repeat ex. AGAGAG",
@@ -34,6 +34,11 @@ variant_tag_tool_tips = {
 'D': "Directional reads, Majority of reads are in the same direction",
 'E': "End of reads, Variant only supportted by the end of reads",
 'AO': "Ambiguous Other, Provide an explanation not otherwise specified here",
+'MS': "Multiple Samples, Variant appears in multiple samples",
+'HC':"Hard-clipped, Reads containing variant are hard-clipped",
+'TO':"Tumor-only, No germline available",
+'SB':"Strand Bias, variant is found on reads of only one strand",
+'LQ':"Low quality, variant reads are of low quality",
 }
 
 class IGV_Socket(object):
@@ -98,12 +103,11 @@ class IGV_Socket(object):
 
 class ReviewWidget(wx.Frame):
     def __init__(self, *args, **kwargs):
-        super(ReviewWidget, self).__init__(*args, **kwargs) 
+        super(ReviewWidget, self).__init__(*args, **kwargs)
         self.bedfile = None
         self.igvsock = None
-
+        self.font=wx.Font(14,wx.DECORATIVE,wx.ITALIC,wx.NORMAL)
         self.InitUI()
-
     def setBedFile(self, bedfile):
         self.bedfile = bedfile
 
@@ -122,7 +126,6 @@ class ReviewWidget(wx.Frame):
 
         menu_bar = wx.MenuBar()
         menu_bar.Append(file_menu, 'File')
-
         self.SetMenuBar(menu_bar)
 
         wx.EVT_MENU(self, ID_FILE_OPEN, self.OnOpen)
@@ -136,52 +139,61 @@ class ReviewWidget(wx.Frame):
 
     def InitUI(self):
         self.CreateMenus()
-
+        padd=5
         framelayout = wx.BoxSizer(wx.VERTICAL)
-
         self.filenameText = wx.TextCtrl(self, style=wx.TE_READONLY)
         self.isbase1 = wx.CheckBox(self, label='1-Base?')
+        self.isbase1.SetFont(self.font)
 
         framelayout.Add(self.filenameText, 0, wx.EXPAND, 0)
-        framelayout.Add(self.isbase1, 0, wx.EXPAND, 0)
+        framelayout.Add(self.isbase1, 0, wx.EXPAND | wx.ALL, padd)
 
         self.isbase1.Bind(wx.EVT_CHECKBOX, self.SetBase)
 
         navpanel = self.createNavPanel()
 
-        framelayout.Add(navpanel, 0,0,0)
-
-        framelayout.Add( wx.StaticText( self, label="Variant" ), 0, wx.EXPAND, 0)
+        framelayout.Add(navpanel, 0,wx.ALL,padd)
+        variant=wx.StaticText( self, label="Variant" )
+        variant.SetFont(self.font)
+        framelayout.Add( variant, 0, wx.EXPAND |wx.LEFT, padd)
 
         varpanel = self.createVarNumPanel()
-        framelayout.Add(varpanel, 0,0,0)
+        framelayout.Add(varpanel, 0,wx.ALL,padd)
 
         self.posText = wx.TextCtrl(self, style=wx.TE_READONLY)
         self.refText = wx.TextCtrl(self, style=wx.TE_READONLY)
         self.varText = wx.TextCtrl(self, style=wx.TE_READONLY)
 
-        framelayout.Add(self.posText, 0, wx.EXPAND, 0)
-        framelayout.Add(self.refText, 0, wx.EXPAND, 0)
-        framelayout.Add(self.varText, 0, wx.EXPAND, 0)
+        self.posText.SetFont(self.font)
+        self.refText.SetFont(self.font)
+        self.varText.SetFont(self.font)
 
-        framelayout.Add( wx.StaticText( self, label="Call" ), 0, wx.EXPAND, 0)
+
+        framelayout.Add(self.posText, 0, wx.EXPAND | wx.ALL, padd)
+        framelayout.Add(self.refText, 0, wx.EXPAND | wx.ALL, padd)
+        framelayout.Add(self.varText, 0, wx.EXPAND | wx.ALL, padd)
+        call=wx.StaticText( self, label="Call" )
+        call.SetFont(self.font)
+        framelayout.Add( call, 0, wx.EXPAND | wx.LEFT, padd)
 
         callpanel = self.createCallPanel()
         framelayout.Add(callpanel, 0,0,0)
-
-        framelayout.Add( wx.StaticText( self, label="Tags" ), 0, wx.EXPAND, 0)
+        tags=wx.StaticText( self, label="Tags" )
+        tags.SetFont(self.font)
+        framelayout.Add( tags, 0, wx.EXPAND | wx.LEFT, padd)
         tagspanel = self.createTagsPanel()
         framelayout.Add(tagspanel, 0,wx.EXPAND,0)
-
-        framelayout.Add( wx.StaticText( self, label="Notes" ), 0, wx.EXPAND, 0)
-        self.notesText = wx.TextCtrl(self, style=wx.TE_MULTILINE, size=(-1,100))
+        notes=wx.StaticText( self, label="Notes" )
+        notes.SetFont(self.font)
+        framelayout.Add( notes, 0, wx.EXPAND | wx.LEFT, padd)
+        self.notesText = wx.TextCtrl(self, style=wx.TE_MULTILINE, size=(-1,200))
+        self.notesText.SetFont(self.font)
         self.notesText.Bind( wx.EVT_TEXT, self.NotesChanged )
 
         framelayout.Add( self.notesText, 0, wx.EXPAND, 0 )
-
         savebutton = wx.Button(self, -1, label='Save')
         savebutton.Bind(wx.EVT_BUTTON, self.OnSave)
-        framelayout.Add( savebutton, 0, wx.EXPAND, 0 )
+        framelayout.Add( savebutton, 0, wx.EXPAND | wx.ALL, padd )
 
         self.SetSizer(framelayout)
         framelayout.SetSizeHints(self)
@@ -210,19 +222,25 @@ class ReviewWidget(wx.Frame):
         self.refresh()
 
     def createVarNumPanel(self):
+        padd=5
         varpanel = wx.Panel(self)
         varlayout = wx.BoxSizer(wx.HORIZONTAL)
-
-        varlayout.Add( wx.StaticText( varpanel, label="#" ), 0, 0, 0)
+        pound=wx.StaticText( varpanel, label="#" )
+        font=wx.Font(18,wx.DECORATIVE,wx.ITALIC,wx.NORMAL)
+        pound.SetFont(font)
+        varlayout.Add( pound, 0, wx.RIGHT, padd)
 
         self.numText = wx.TextCtrl(varpanel, size=(50,-1))
         self.totText = wx.TextCtrl(varpanel, style=wx.TE_READONLY, size=(50,-1))
 
         varlayout.Add( self.numText, 0, 0, 0)
-        varlayout.Add( wx.StaticText( varpanel, label="/" ), 0, 0, 0)
+        slash=wx.StaticText( varpanel, label="/" )
+        slash.SetFont(font)
+        varlayout.Add( slash, 0, wx.LEFT|wx.RIGHT, padd)
         varlayout.Add( self.totText, 0, 0, 0)
 
         self.gotoVarButton = wx.Button(varpanel, -1, label="Go", style=wx.BU_EXACTFIT)
+        self.gotoVarButton.SetFont(self.font)
         self.gotoVarButton.Bind(wx.EVT_BUTTON, self.goToVar)
 
         varlayout.Add( self.gotoVarButton, 0, 0, 0)
@@ -233,6 +251,7 @@ class ReviewWidget(wx.Frame):
         return varpanel
 
     def createCallPanel(self):
+        padd=5
         callpanel = wx.Panel(self)
         calllayout = wx.BoxSizer(wx.HORIZONTAL)
 
@@ -241,10 +260,14 @@ class ReviewWidget(wx.Frame):
         ambbutton = wx.ToggleButton(callpanel, -1, label='A', style=wx.BU_EXACTFIT)
         failbutton = wx.ToggleButton(callpanel, -1, label='F', style=wx.BU_EXACTFIT)
 
-        calllayout.Add(sombutton, 0,0,0)
-        calllayout.Add(germbutton, 0,0,0)
-        calllayout.Add(ambbutton, 0,0,0)
-        calllayout.Add(failbutton, 0,0,0)
+        sombutton.SetFont(self.font)
+        germbutton.SetFont(self.font)
+        ambbutton.SetFont(self.font)
+        failbutton.SetFont(self.font)
+        calllayout.Add(sombutton, 0,wx.LEFT | wx.RIGHT, padd)
+        calllayout.Add(germbutton, 0,wx.LEFT | wx.RIGHT, padd)
+        calllayout.Add(ambbutton, 0,wx.LEFT | wx.RIGHT, padd)
+        calllayout.Add(failbutton, 0,wx.LEFT | wx.RIGHT, padd)
 
         sombutton.SetToolTip(wx.ToolTip(variant_call_tool_tips['S']))
         germbutton.SetToolTip(wx.ToolTip(variant_call_tool_tips['G']))
@@ -264,20 +287,24 @@ class ReviewWidget(wx.Frame):
         return callpanel
 
     def createTagsPanel(self):
+        padd=5
         self.tag_buttons = {}
         variant_tags = sorted( list( variant_tag_tool_tips.keys() ) )
 
-        bpanel = wx.Panel(self,size=(-1, 25*len(variant_tags)/5))
+        bpanel = wx.Panel(self,size=(-1, 35*len(variant_tags)/3))
         blayout = wx.WrapSizer(wx.HORIZONTAL)
 
         for tag in variant_tags:
             tooltip = variant_tag_tool_tips[tag]
 
             tag_button = wx.ToggleButton( bpanel, -1, label=tag, style=wx.BU_EXACTFIT )
+
+            tag_button.SetFont(self.font)
+
             tag_button.SetToolTip( wx.ToolTip( tooltip ) )
             tag_button.Bind(wx.EVT_TOGGLEBUTTON, self.ChooseTags )
 
-            blayout.Add(tag_button, 0, wx.ALL, 0)
+            blayout.Add(tag_button, 0, wx.ALL, padd)
 
             self.tag_buttons[tag] = tag_button
 
@@ -298,6 +325,14 @@ class ReviewWidget(wx.Frame):
         nextbtn = wx.Button(navpanel, -1, label='>>', style=wx.BU_EXACTFIT)
         lastbtn = wx.Button(navpanel, -1, label='>|', style=wx.BU_EXACTFIT)
         sortbtn = wx.Button(navpanel, -1, label="S", style=wx.BU_EXACTFIT)
+
+        firstbtn.SetFont(self.font)
+        prevbtn.SetFont(self.font)
+        backbtn.SetFont(self.font)
+        fwdbtn.SetFont(self.font)
+        nextbtn.SetFont(self.font)
+        lastbtn.SetFont(self.font)
+        sortbtn.SetFont(self.font)
 
         navlayout.Add(firstbtn, 0,0,0)
         navlayout.Add(prevbtn, 0,0,0)
