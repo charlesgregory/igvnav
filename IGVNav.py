@@ -16,8 +16,8 @@ variant_call_tool_tips = {
 
 variant_tag_tool_tips = {
 'AI': "Adjacent Indel, variant likely due to misalignment of an adjacent indel",
-'HDR': "High Discrepancy Region, Dirty Region, Region contain many reads with multiple mismatches",
-'MM': "Multiple Mismatches, Reads with variant contains multiple mismatches from referencence",
+'HDR': "High Discrepancy Region, Dirty Region, Region contains many reads with multiple mismatches",
+'MM': "Multiple Mismatches, Reads with variant contain multiple mismatches from reference",
 'MV': "Multiple Variants, More than 1 non-reference variant at the same base location",
 'MN': "MonoNucleotide run, Region contains pattern of repeat ex. AAAAAA",
 'DN': "DiNucleotide run, Region contains pattern of repeat ex. AGAGAG",
@@ -29,16 +29,16 @@ variant_tag_tool_tips = {
 'LVF': "Low Variant Allele Frequency, Variant has a low VAF",
 'LM': "Low Mapping quality, Reads are poorly mapped",
 'SI': "Short Insert, Reads contain short inserts",
-'SIO': " Short Insert Only,  Reads contain only short inserts",
+'SIO': "Short Insert Only,  Reads contain only short inserts",
 'SSE': "Same Start/END,  Short reads have same start or end points",
 'D': "Directional reads, Majority of reads are in the same direction",
-'E': "End of reads, Variant only supportted by the end of reads",
+'E': "End of reads, Variant only supported by the end of reads",
 'AO': "Ambiguous Other, Provide an explanation not otherwise specified here",
 'MS': "Multiple Samples, Variant appears in multiple samples",
 'HC':"Hard-clipped, Reads containing variant are hard-clipped",
 'TO':"Tumor-only, No germline available",
 'SB':"Strand Bias, variant is found on reads of only one strand",
-'LQ':"Low quality, variant reads are of low quality",
+'LQ':"Low quality, variant reads are of low base quality",
 }
 
 class IGV_Socket(object):
