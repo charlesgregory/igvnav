@@ -39,6 +39,8 @@ variant_tag_tool_tips = {
 'TO':"Tumor-only, No germline available",
 'SB':"Strand Bias, variant is found on reads of only one strand",
 'LQ':"Low quality, variant reads are of low base quality",
+'BIR':"Flag for Bioinformatics Review",
+'IDK':"I don't know what to call"
 }
 
 class IGV_Socket(object):
@@ -298,6 +300,11 @@ class ReviewWidget(wx.Frame):
             tooltip = variant_tag_tool_tips[tag]
 
             tag_button = wx.ToggleButton( bpanel, -1, label=tag, style=wx.BU_EXACTFIT )
+
+            if tag=="BIR":
+                tag_button.SetBackgroundColour(wx.Colour(0, 100, 200))
+            elif tag=="IDK":
+                tag_button.SetBackgroundColour(wx.Colour(255, 0, 0))
 
             tag_button.SetFont(self.font)
 
