@@ -616,7 +616,7 @@ class BedFile(object):
 
 def main(*args):
     app = wx.App()
-    port=args[0][1]
+    port=int(args[0][1])
     sock=IGV_Socket()
     sock.set_port(port)
     rw = ReviewWidget(None)
