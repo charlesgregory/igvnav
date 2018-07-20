@@ -50,9 +50,12 @@ class IGV_Socket(object):
     def set_base(self, base):
         self.base = base
 
+    def set_port(self, port):
+        self.port=port
+
     def connect(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect( ("127.0.0.1", 60151) )
+        self.sock.connect( ("127.0.0.1", self.port) )
 
     def send_cmd(self, cmd):
         totalsent = 0
@@ -613,9 +616,11 @@ class BedFile(object):
 
 def main(*args):
     app = wx.App()
-
+    port=args[0][1]
+    sock=IGV_Socket()
+    sock.set_port(port)
     rw = ReviewWidget(None)
-    rw.setSocket(IGV_Socket())
+    rw.setSocket(sock)
     rw.OnOpen(None)
 
     app.MainLoop()
